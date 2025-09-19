@@ -1,0 +1,122 @@
+body{
+    text-align: center;
+    height: 555px;
+    width: 100%;
+    /* background-color: #19c3fb; */
+    font-family: monospace;
+    font-weight: bold;
+     /* background-image: url("sunrise-landscape-minimalism-5k-ex-1920x1080.jpg");  */
+     background-color: #92b298;
+    
+}
+
+#main{
+    /* border:1px solid black; */
+    width:50%;
+    margin:auto;
+    margin-top: 25px;
+     /* margin-bottom: -120px;  */
+    height: 255px;
+   
+}
+#divM{
+    width:35%;
+    margin-bottom: 15px;
+}
+
+#city{
+    height: 40px;
+    width: 25%;
+    font-size: medium;
+    text-align: justify;
+    border: none;
+    border-radius: 2px;
+   
+    outline: none;
+    
+}
+#submit{
+    margin-top: 20px;
+    margin-left: 10px;
+    height: 40px;
+    width: 15%;
+    background-color: #c6d6d1;
+    border: 1px;
+    border-radius: 4px;
+    font-size: medium;
+    font-weight: bold;
+    cursor: pointer;
+
+}
+h5{
+   font-size: small;   
+    
+}
+#gps{
+    height: 45px;
+    width: 30%;
+    font-size: medium;
+    text-align: center;
+    border: 45px;
+    cursor: pointer;
+    background-color: #d3bab4;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    
+
+}
+#container{
+    display: flex;
+    /* border: 1px solid red; */
+    text-align: center;
+    justify-content: space-between;
+    width:70%;
+    height: fit-content;
+    margin-top: 10px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: large;
+    margin: 0 9rem;
+    border-radius: 2px;
+    height: 45vh;
+    color: rgb(12, 12, 12);
+
+}
+#gmap_canvas {
+    /* overflow:hidden;
+    background:none!important; */
+    height:400px;
+    width:600px;
+    
+} 
+.mapouter{
+    text-align: right;
+}
+
+#box{
+    display: grid;
+    grid-template-columns: repeat(7,1fr);
+    grid-template-rows: auto;
+    gap: 5px;
+    margin: auto;
+    background-color:transparent;
+    margin-top: -400px;
+    width:80%;
+    border-radius: 15px;
+}
+#image{
+    margin-left: 30px;
+}
+#box > div > p{
+    display: block;
+    text-align: center;
+    color:black;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: medium;
+
+
+
+}
+h1{
+    color: rgb(5, 5, 5);
+    font-family: 'Times New Roman', Times, serif;
+    font-style: italic;
+}
