@@ -1,164 +1,199 @@
+const api_key = "1a6e7ef23aac45bf3c709fe4a861663e";
 
+const cityInput = document.getElementById("city");
 
-//https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}
-
-
-const api_key = `5128a0a08aa9659e5f3dccddc81954b1`
-
-function getData(){
-    let city = document.getElementById("city").value;
-
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${api_key}`;
-
-fetch(url)
-.then(function (res) {
-    return res.json();
-})
-.then(function (res) {
-    append(res)
-    console.log(res);
-})
-.catch(function (err) {
-   console.log("err:" , err);
+cityInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault(); // prevents form reload (if any)
+    if (!cityInput.value.trim()) {
+      showError("Please enter a city name!");
+      return;
+    }
+    getWeatherByCity(cityInput.value);
+  }
 });
 
-}
+const searchBtn = document.getElementById("searchBtn");
+const gpsBtn = document.getElementById("gpsBtn");
+const container = document.getElementById("container");
+const forecastDiv = document.getElementById("forecast");
+const loading = document.getElementById("loading");
+const mapContainer = document.querySelector(".weather-right"); // ✅ updated to target right column
+const mapFrame = document.getElementById("gmap_canvas");
+const forecastTitle = document.getElementById("forecast-title");
+const errorMessage = document.getElementById("error-message");
 
-function getDataLocation(lat,lon){
-    const url =`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=5128a0a08aa9659e5f3dccddc81954b1`;
-
-    fetch(url)
-.then(function (res) {
-    return res.json();
-})
-.then(function (res) {
-    append(res)
-    console.log(res);
-    
-})
-.catch(function (err) {
-   console.log("err:" , err);
+searchBtn.addEventListener("click", () => {
+  if (!cityInput.value.trim()) return showError("Please enter a city name!");
+  getWeatherByCity(cityInput.value);
 });
 
+gpsBtn.addEventListener("click", () => {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => getWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
+    () => showError("Unable to fetch location.")
+  );
+});
+
+async function getWeatherByCity(city) {
+  try {
+    toggleLoading(true);
+    clearForecast();
+    mapContainer.classList.add("hidden"); // ✅ hide map until we have new data
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${api_key}`
+    );
+    const data = await res.json();
+    if (data.cod !== 200) throw new Error(data.message);
+    displayWeather(data);
+    getForecast(data.coord.lat, data.coord.lon);
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    toggleLoading(false);
+  }
 }
 
-function getDailyData(lat,log){
-    const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${log}&exclude{part}&appid=5128a0a08aa9659e5f3dccddc81954b1`
+async function getWeatherByCoords(lat, lon) {
+  try {
+    toggleLoading(true);
+    clearForecast();
+    mapContainer.classList.add("hidden");
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${api_key}`
+    );
+    const data = await res.json();
+    displayWeather(data);
+    getForecast(lat, lon);
+  } catch (e) {
+    showError("Error fetching weather data.");
+  } finally {
+    toggleLoading(false);
+  }
+}
+
+async function getForecast(lat, lon) {
+  try {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${api_key}`
+    );
+    if (!res.ok) throw new Error("Forecast API failed");
+    const data = await res.json();
+
+    const dailyMap = {};
+    data.list.forEach(item => {
+      const dateKey = new Date(item.dt * 1000).toDateString();
+      if (!dailyMap[dateKey] && item.dt_txt.includes("12:00:00")) {
+        dailyMap[dateKey] = item;
+      }
+    });
+
+    displayForecast(Object.values(dailyMap).slice(0, 5));
+  } catch (err) {
+    showError("Unable to load forecast data.");
+    console.error("Forecast error:", err);
+  }
+}
+
+function displayWeather(data) {
+  const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  const windDir = getWindDirection(data.wind.deg);
+
+  container.innerHTML = `
+  <h2><i class="fas fa-location-dot"></i> ${data.name}</h2>
+  <p><i class="fas fa-temperature-high"></i> Temp: ${Math.round(data.main.temp - 273.15)}°C</p>
+  <p><i class="fas fa-thermometer-half"></i> Feels Like: ${Math.round(data.main.feels_like - 273.15)}°C</p>
+  <p>
+    <span class="temp-max"><i class="fas fa-arrow-up"></i> Max: ${Math.round(data.main.temp_max - 273.15)}°C</span> | 
+    <span class="temp-min"><i class="fas fa-arrow-down"></i> Min: ${Math.round(data.main.temp_min - 273.15)}°C</span>
+  </p>
+  <p><i class="fas fa-tint"></i> Humidity: ${data.main.humidity}%</p>
+  <p><i class="fas fa-wind"></i> Wind: ${data.wind.speed} km/h (${windDir})</p>
+  <p><i class="fas fa-cloud-sun"></i> Condition: ${data.weather[0].description}</p>
+  <p><i class="fas fa-sun"></i> Sunrise: ${sunrise} | <i class="fas fa-moon"></i> Sunset: ${sunset}</p>
+`;
+
+
+  document.querySelector(".weather-layout").classList.remove("hidden");
+  document.querySelector(".weather-right").classList.remove("hidden");
+  container.classList.remove("hidden");
+
+  changeBackground(data.weather[0].main);
+  container.classList.remove("hidden");
+
+  // ✅ Show map only after weather data loads
+  mapFrame.src = `https://maps.google.com/maps?q=${data.coord.lat},${data.coord.lon}&z=13&output=embed`;
+  mapContainer.classList.remove("hidden");
+}
+
+function displayForecast(daily) {
+  forecastDiv.innerHTML = "";
+  daily.forEach(day => {
+    const date = new Date(day.dt * 1000);
+    const condition = day.weather[0].main;
+    const rainProb = Math.round((day.pop || 0) * 100);
     
-    fetch(url)
-    .then(function (res){
-        return res.json();
-    })
-    .then(function(res){
-        appendDaily(res)
-        console.log(res);
-    })
-}
 
-function appendDaily(data){
-    let container = document.getElementById("box");
-    document.querySelector("#box").innerHTML =null ;
-    let i=0 ;
+    const weatherIcons = {
+      Clear: '<i class="fas fa-sun" style="color:#f39c12;font-size:1.5rem;"></i>',
+      Clouds: '<i class="fas fa-cloud" style="color:#95a5a6;font-size:1.5rem;"></i>',
+      Rain: '<i class="fas fa-cloud-showers-heavy" style="color:#3498db;font-size:1.5rem;"></i>',
+      Drizzle: '<i class="fas fa-cloud-rain" style="color:#5dade2;font-size:1.5rem;"></i>',
+      Thunderstorm: '<i class="fas fa-bolt" style="color:#f1c40f;font-size:1.5rem;"></i>',
+      Snow: '<i class="fas fa-snowflake" style="color:#00acee;font-size:1.5rem;"></i>',
+      Mist: '<i class="fas fa-smog" style="color:#7f8c8d;font-size:1.5rem;"></i>',
+      Fog: '<i class="fas fa-smog" style="color:#7f8c8d;font-size:1.5rem;"></i>',
+      Haze: '<i class="fas fa-water" style="color:#a4b0be;font-size:1.5rem;"></i>',
+    };
 
-     data.daily.map(function(elem){
+    const iconHTML = weatherIcons[condition] || '<i class="fas fa-cloud"></i>';
 
-        if(i==0){
+    forecastDiv.innerHTML += `
+      <div class="forecast-item">
+        <p><strong><i class="fas fa-calendar-day"></i> ${date.toDateString().slice(0, 10)}</strong></p>
+        ${iconHTML}
+        <p><i class="fas fa-arrow-up" style="color:red;"></i> ${Math.round(day.main.temp_max - 273.15)}°C</p>
+        <p><i class="fas fa-arrow-down" style="color:blue;"></i> ${Math.round(day.main.temp_min - 273.15)}°C</p>
+         <p><i class="fas fa-umbrella"></i> ${rainProb}%</p>
+      </div>
+    `;
+  });
 
-        }
-        else
-        {
-            let box2 = document.createElement("div")
-
-            // let day = document.createElement("h3")
-            let day = document.createElement("p");
-            const time = elem.dt;
-            const date = new Date(time * 1000);
-            day.innerText = `Date : ${date.toLocaleDateString("en-US")}`;
-
-         
-         
-            let img = document.createElement("img")
-            img.setAttribute("id","image")
-            img.src =  
-            ` https://openweathermap.org/img/wn/${elem.weather[0].icon}@2x.png`         
-            
-            let max = document.createElement("p")
-            max.innerText = `Max: ${Math.round(elem.temp.max - 273)} °C`
-         
-            let min = document.createElement("p")
-            min.innerText = `Min: ${Math.round(elem.temp.min - 273)} °C`
-         
-            box2.append(day,img,max,min)
-
-            container.append(box2)
-        
-          
-        }
-        i++;
-    })
-
+  forecastTitle.classList.remove("hidden");
+  forecastDiv.classList.remove("hidden");
 }
 
 
-
-function append(data){
-    let container = document.getElementById("container");
-
-    let map =document.getElementById("gmap_canvas");
-    container.innerText = null; 
-    
-    let divM = document.createElement("div");
-    divM.setAttribute("id","divM");
-    
-    let city = document.createElement("p");
-    city.innerText = `City: ${data.name}`;
-     
-    let min = document.createElement("p");
-    min.innerText = `Min temp: ${Math.round(data.main.temp_min - 273)} °C`;
-
-    let max = document.createElement("p");
-    max.innerText = `Max temp:${Math.round(data.main.temp_max - 273)} °C`;
-
-    let current = document.createElement("p");
-    current.innerText = `Temperature: ${Math.round(data.main.temp - 273)} °C`;
-
-    let humidity  = document.createElement("p");
-    humidity.innerText = `Humidity: ${data.main.humidity}%`;
-
-    let wind  = document.createElement("p");
-    wind.innerText = `Wind: ${data.wind.speed}km/h`;
-
-    // let clounds =  document.createElement("p");
-    // clounds.innerText = `Clounds: ${data.clouds.all}`;
-
-    // let sunrise =  document.createElement("p");
-    // sunrise.innerText = `Sunrise: ${data.sys.sunrise}`;
-
-    // let sunset =  document.createElement("p");
-    // sunset.innerText = `Sunset: ${data.sys.sunset}`;
-
-    divM.append(city,min,max,current,humidity,wind);
-    container.append(divM,map);
-    map.src = `https://maps.google.com/maps?q=${data.name}&t=&z=13&ie=UTF8&iwloc=&output=embed `
-
+function toggleLoading(show) {
+  loading.classList.toggle("hidden", !show);
 }
 
-
-    
-function getWeather(){
-navigator.geolocation.getCurrentPosition(success);
-
-function success(position) {
-    var crd = position.coords;
-  
-    console.log('Your current position is:');
-    console.log(`Latitude : ${crd.latitude}`);
-    console.log(`Longitude: ${crd.longitude}`);
-    console.log(`More or less ${crd.accuracy} meters.`);
-    getDataLocation(crd.latitude, crd.longitude);
-
-    getDailyData(crd.latitude,crd.longitude)
+function clearForecast() {
+  forecastDiv.innerHTML = "";
+  forecastTitle.classList.add("hidden");
+  forecastDiv.classList.add("hidden");
 }
-}
-  
 
+function showError(msg) {
+  errorMessage.textContent = msg;
+  errorMessage.classList.remove("hidden");
+  setTimeout(() => errorMessage.classList.add("hidden"), 4000);
+}
+
+function getWindDirection(deg) {
+  const directions = ['N','NE','E','SE','S','SW','W','NW'];
+  return directions[Math.round(deg / 45) % 8];
+}
+
+function changeBackground(condition) {
+  const bgMap = {
+    Clear: "linear-gradient(135deg, #4facfe, #00f2fe)",
+    Clouds: "linear-gradient(135deg, #757f9a, #d7dde8)",
+    Rain: "linear-gradient(135deg, #667db6, #0082c8, #0082c8, #667db6)",
+    Snow: "linear-gradient(135deg, #e0eafc, #cfdef3)",
+    Thunderstorm: "linear-gradient(135deg, #283e51, #485563)",
+    Mist: "linear-gradient(135deg, #606c88, #3f4c6b)"
+  };
+  document.body.style.background = bgMap[condition] || "linear-gradient(135deg, #a1c4fd, #c2e9fb)";
+}

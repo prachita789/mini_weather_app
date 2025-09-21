@@ -1,56 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css"/>
-    <title>Weather Update</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://kit.fontawesome.com/f141e1b7ac.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="index.css"/>
+  <title>Dynamic Weather Dashboard</title>
 </head>
 <body>
 
-  <h1>Mini Weather App</h1>
+  <main>
+  <h1>🌤️ Dynamic Weather Dashboard</h1>
 
-  <div id="main">
-    <input type="text" id="city"  placeholder="Search for a city"/>
-    
-    <button onclick="getData()" id="submit">Search</button>
-      <h5>OR</h5>
-      <button onclick="getWeather()" id="gps">Get Weather on location</button>
+  <div class="search-box">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" id="city" placeholder="Search for a city">
+      <button id="searchBtn"> Search</button>
     </div>
-    <div id="container"></div>
-    <div class="mapouter">
-    <div class="gmap_canvas">
-    <iframe 
-    width="600" 
-    height="400"
-    id="gmap_canvas" 
-    
-    frameborder="0" 
-    scrolling="no" 
-    marginheight="0" 
-    marginwidth="0">
-</iframe>
-<!-- <a href="https://putlocker-is.org"></a><br> -->
-<style>
-.mapouter{position:relative;text-align:right;height:500px;width:723px;}
-</style><a 
-href="https://www.embedgooglemap.net">
-</a>
-<style>
-.gmap_canvas 
-{
-  overflow:hidden;
-background:none!important;
-height:500px;
-width:723px
-}
-</style>
-</div>
-</div>
-<div id="box"></div>
+    <span class="or">OR</span>
+    <button id="gpsBtn"><i class="fas fa-location-dot"></i> Use My Location</button>
+  </div>
+
+  <div id="loading" class="hidden loader"></div>
+  <div id="error-message" class="hidden"></div>
+
+  <!-- NEW layout wrapper -->
+  <div class="weather-layout hidden">
+    <div class="weather-left">
+      <div id="container" class="weather-card hidden"></div>
+      <section id="forecast-section">
+        <h2 id="forecast-title" class="hidden">📅 5-Day Forecast</h2>
+        <div id="forecast" class="forecast-grid hidden"></div>
+      </section>
+    </div>
+
+    <div class="weather-right hidden">
+      <iframe id="gmap_canvas" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" title="Location Map"></iframe>
+    </div>
+  </div>
+</main>
+
+
+  <footer>
+    <p>Powered by <a href="https://openweathermap.org/" target="_blank">OpenWeather</a></p>
+  </footer>
+
+  <script src="index.js"></script>
 </body>
 </html>
-<script src="index.js">
-
-</script>
