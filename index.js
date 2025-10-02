@@ -18,7 +18,7 @@ const gpsBtn = document.getElementById("gpsBtn");
 const container = document.getElementById("container");
 const forecastDiv = document.getElementById("forecast");
 const loading = document.getElementById("loading");
-const mapContainer = document.querySelector(".weather-right"); // ✅ updated to target right column
+const mapContainer = document.querySelector(".weather-right"); 
 const mapFrame = document.getElementById("gmap_canvas");
 const forecastTitle = document.getElementById("forecast-title");
 const errorMessage = document.getElementById("error-message");
@@ -39,7 +39,7 @@ async function getWeatherByCity(city) {
   try {
     toggleLoading(true);
     clearForecast();
-    mapContainer.classList.add("hidden"); // ✅ hide map until we have new data
+    mapContainer.classList.add("hidden"); 
     const res = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${api_key}`
     );
@@ -122,7 +122,7 @@ function displayWeather(data) {
   changeBackground(data.weather[0].main);
   container.classList.remove("hidden");
 
-  // ✅ Show map only after weather data loads
+  // Show map only after weather data loads
   mapFrame.src = `https://maps.google.com/maps?q=${data.coord.lat},${data.coord.lon}&z=13&output=embed`;
   mapContainer.classList.remove("hidden");
 }

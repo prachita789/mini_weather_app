@@ -65,18 +65,51 @@ h1 {
 }
 
 .search-bar button {
-  padding: 12px 20px;
+  position: relative;
+  padding: 10px 20px;
   border-radius: 50px;
-  border: none;
-  background: #4e9eff;
-  color: white;
+  border: 2px solid transparent;
+  background: white;
+  color: #4e9eff;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s ease-in-out;
+  overflow: hidden;
+  z-index: 1;
+  transition: color 0.3s ease, background 0.3s ease;
+}
+
+.search-bar button::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    #4285f4,
+    #34a853,
+    #fbbc05,
+    #ea4335,
+    #4285f4
+  );
+  background-size: 200% 200%;
+  animation: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.search-bar button:hover::before {
+  opacity: 1;
+  animation: spin 1.5s linear infinite;
 }
 
 .search-bar button:hover {
-  background-color: #357ae8;
+ 
+  background: white; 
+  color: black 
+  
 }
 
 .or {
@@ -108,7 +141,12 @@ h1 {
   animation: spin 1s linear infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .hidden { display: none; }
@@ -233,7 +271,7 @@ h1 {
 .temp-max { color: #e63946; font-weight: 600; }
 .temp-min { color: #0077b6; font-weight: 600; }
 
-/* Footer stays at bottom */
+
 footer {
   text-align: center;
   font-size: 0.85rem;
